@@ -100,6 +100,16 @@ ENV NGINX_DIR=$NGINX_DIR
 ARG PATH=/data/nginx/sbin:$PATH
 ENV PATH=$PATH
 
+ARG NGINX_BUILD_DEPS="\
+    libssl-dev \
+    zlib1g-dev \
+    libpcre2-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    libgd-dev \
+    libgeoip-dev"
+ENV NGINX_BUILD_DEPS=$NGINX_BUILD_DEPS
+
 # 安装依赖包
 ARG PKG_DEPS="\
     zsh \
@@ -178,7 +188,7 @@ RUN set -eux && \
    # 更新系统软件
    DEBIAN_FRONTEND=noninteractive apt-get update -qqy && apt-get upgrade -qqy && \
    # 安装依赖包
-   DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends $PKG_DEPS --option=Dpkg::Options::=--force-confdef && \
+   DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends $PKG_DEPS $NGINX_BUILD_DEPS --option=Dpkg::Options::=--force-confdef && \
    DEBIAN_FRONTEND=noninteractive apt-get -qqy --no-install-recommends autoremove --purge && \
    DEBIAN_FRONTEND=noninteractive apt-get -qqy --no-install-recommends autoclean && \
    rm -rf /var/lib/apt/lists/* && \
