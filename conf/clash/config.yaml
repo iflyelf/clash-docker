@@ -17,6 +17,20 @@ tproxy-port: 7893
 # HTTP 和 SOCKS4(A)/SOCKS5 服务器在同一端口
 mixed-port: 7890
 
+# 设置跳过验证的IP段
+skip-auth-prefixes:
+  - 127.0.0.1/8
+  - ::1/128
+
+# 允许连接的 IP 地址段，仅作用于 allow-lan 为 true, 默认值为0.0.0.0/0和::/0
+lan-allowed-ips:
+  - 0.0.0.0/0
+  - ::/0
+
+# 禁止连接的 IP 地址段, 黑名单优先级高于白名单, 默认值为空
+lan-disallowed-ips:
+  - 192.168.0.3/32
+
 # 本地 SOCKS5 / HTTP(S) 服务认证
 #authentication:
 # - "admin:@admin123"
@@ -31,8 +45,28 @@ allow-lan: true
 bind-address: "*"
 ipv6: true
 
+#  find-process-mode has 3 values:always, strict, off
+#  - always, 开启，强制匹配所有进程
+#  - strict, 默认，由 mihomo 判断是否开启
+#  - off, 不匹配进程，推荐在路由器上使用此模式
+find-process-mode: strict
+
 # 规则模式：rule（规则） / global（全局代理）/ direct（全局直连）/ script (脚本)
-# mode: script
+mode: rule
+
+# 自定义 geodata url
+geox-url:
+  geoip: "https://link.onlysing.com/get/clash/geo/geoip.dat"
+  geosite: "https://link.onlysing.com/get/clash/geo/geosite.dat"
+  mmdb: "https://link.onlysing.com/get/clash/geo/geoip.metadb"
+
+# 是否自动更新 geodata
+geo-auto-update: false
+# 更新间隔，单位：小时
+geo-update-interval: 24
+
+# TCP 并发连接所有 IP, 将使用最快握手的 TCP
+# tcp-concurrent: true
 
 # 设置日志输出级别 (默认级别：silent，即不输出任何内容，以避免因日志内容过大而导致程序内存溢出）。
 # 5 个级别：silent / error / warning / info / debug。级别越高日志输出量越大，越倾向于调试，若需要请自行开启。
@@ -40,6 +74,8 @@ log-level: info
 
 # Clash 的 RESTful API
 external-controller: ':9090'
+# RESTful API HTTPS 监听地址，需要配置 tls 部分配置文件
+# external-controller-tls: ':9443'
 
 # 您可以将静态网页资源（如 clash-dashboard）放置在一个目录中，clash 将会服务于 `RESTful API/ui`
 # 参数应填写配置目录的相对路径或绝对路径。
@@ -48,22 +84,471 @@ external-controller: ':9090'
 # yacd面板：  https://github.com/haishanh/yacd
 # Razord面板：http://clash.razord.top/#/proxies
 # external-ui: dashboard
+# external-ui-name: xiaonuo
+# external-ui-url: "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
 
 # RESTful API 的口令 (可选)
 secret: "@admin123"
 
-# 实验性功能
-experimental:
-  ignore-resolve-fail: true # 忽略 DNS 解析失败，默认值为 true
-  # interface-name: eth0 # 绑定接口名称
+# interface-name: en0 # 设置出口网卡
 
-# fwmark on Linux only 
-routing-mark : 0x162
+# 全局 TLS 指纹，优先低于 proxy 内的 client-fingerprint
+# 可选： "chrome","firefox","safari","ios","random","none" options.
+# Utls is currently support TLS transport in TCP/grpc/WS/HTTP for VLESS/Vmess and trojan.
+client-fingerprint: chrome
 
-cfw-latency-timeout: 3000
-cfw-latency-url: http://www.gstatic.com/generate_204      
-cfw-conn-break-strategy:
-  proxy: none
-  profile: true
-  mode: false
-cfw-proxies-order: default
+#  TCP keep alive interval
+# disable-keep-alive: false #目前在android端强制为true
+# keep-alive-idle: 15
+# keep-alive-interval: 15
+
+# 配置 fwmark 仅用于 Linux
+# routing-mark:6666
+
+# DNS 服务器和连接建立的静态主机（如 /etc/hosts）
+# 实验性功能 hosts, 支持通配符 (例如 *.clash.dev 甚至 *.foo.*.example.com)
+# 静态的域名 比 通配域名 具有更高的优先级 (foo.example.com 优先于 *.example.com)
+# 注意: hosts 在 fake-ip 模式下不生效
+# hosts:
+# '*.mihomo.dev': 127.0.0.1
+# '.dev': 127.0.0.1
+# 'alpha.mihomo.dev': '::1'
+# test.com: [1.1.1.1, 2.2.2.2]
+# home.lan: lan # lan 为特别字段，将加入本地所有网卡的地址
+# baidu.com: google.com # 只允许配置一个别名
+
+# 追踪
+profile:
+  # 存储 select 选择记录
+  store-selected: true
+  # 持久化 fake-ip
+  store-fake-ip: true
+
+# Tun 配置
+tun:
+  enable: false
+  stack: gvisor # gvisor/mixed
+  dns-hijack:
+    # 需要劫持的 DNS
+    - "any:53"
+    - "tcp://any:53"
+    - "udp://any:53"
+  # 自动识别出口网卡
+  auto-detect-interface: true
+  # 配置路由表
+  auto-route: true
+  # mtu: 9000 # 最大传输单元
+  # gso: false # 启用通用分段卸载, 仅支持 Linux
+  # gso-max-size: 65536 # 通用分段卸载包的最大大小
+  # strict-route: true # 将所有连接路由到tun来防止泄漏，但你的设备将无法其他设备被访问
+  route-address: # 启用 auto-route 时使用自定义路由而不是默认路由
+    - 0.0.0.0/1
+    - 128.0.0.0/1
+    - "::/1"
+    - "8000::/1"
+  # 排除路由对应接口，可解决 docker/podman 容器内网络回环问题
+  exclude-interface:
+    - "docker*"
+    - "podman*"
+    - "uola"
+  # 排除网段，可解决 WireGuard/Tailscale 冲突
+  route-exclude-address:
+    - 10.88.0.0/16
+    - fc00::/7
+
+# 嗅探域名 可选配置
+sniffer:
+  enable: true
+  ## 对 redir-host 类型识别的流量进行强制嗅探
+  ## 如：Tun、Redir 和 TProxy 并 DNS 为 redir-host 皆属于
+  # force-dns-mapping: false
+  ## 对所有未获取到域名的流量进行强制嗅探
+  parse-pure-ip: true
+  # 是否使用嗅探结果作为实际访问，默认 true
+  # 全局配置，优先级低于 sniffer.sniff 实际配置
+  override-destination: false
+  sniff: # TLS 和 QUIC 默认如果不配置 ports 默认嗅探 443
+    QUIC:
+     ports: [ 443 ]
+    TLS:
+     ports: [443, 8443]
+    # 默认嗅探 80
+    HTTP: # 需要嗅探的端口
+      ports: [80, 8080-8880]
+      # 可覆盖 sniffer.override-destination
+      override-destination: true
+  #force-domain:
+  #  - +.v2ex.com
+  ## 对嗅探结果进行跳过
+  #skip-domain:
+  #  - "Mijia Cloud"
+  # 需要嗅探协议
+  # 已废弃，若 sniffer.sniff 配置则此项无效
+  sniffing:
+    - tls
+    - http
+  # 强制对此域名进行嗅探
+
+  # 仅对白名单中的端口进行嗅探，默认为 443，80
+  # 已废弃，若 sniffer.sniff 配置则此项无效
+  port-whitelist:
+    - "80"
+    - "443"
+    # - 8000-9999
+
+# DNS配置
+dns:
+  cache-algorithm: arc
+  # 启用DNS配置
+  enable: false
+  # DNS监听端口
+  listen: :53
+  # 启用IPV6
+  ipv6: true
+  # 开启 DoH 支持 HTTP/3，将并发尝试
+  prefer-h3: true
+  # 协议模式
+  enhanced-mode: fake-ip
+  # fake-ip 池设置
+  fake-ip-range: 28.0.0.1/8
+  # 查询 hosts
+  use-hosts: true
+  # 配置不使用fake-ip的域名
+  fake-ip-filter:
+    - "*"
+    - '+.*'
+    - "+.lan"
+    - "+.local"
+  # 默认解析
+  default-nameserver:
+    - 223.5.5.5
+    - 223.6.6.6
+    - 119.29.29.29
+    - "[2400:3200:baba::1]:53"
+    - "[2400:3200::1]:53"
+    - "[2402:4e00::]:53"
+    - "[2402:4e00:1::]:53"
+    - system
+  # 主要 DNS 配置
+  nameserver:
+    - 223.5.5.5
+    - 223.6.6.6
+    - 119.29.29.29
+    - "[2400:3200:baba::1]:53"
+    - "[2400:3200::1]:53"
+    - "[2402:4e00::]:53"
+    - "[2402:4e00:1::]:53"
+    - https://dns.alidns.com/dns-query
+  # 当配置 fallback 时，会查询 nameserver 中返回的 IP 是否为 CN，非必要配置
+  # 当不是 CN，则使用 fallback 中的 DNS 查询结果
+  fallback:
+    - https://dns01.onlysing.com/dns-query
+    - https://dns02.onlysing.com/dns-query
+  # 配置查询域名使用的 DNS 服务器
+  nameserver-policy:
+    "rule-set:XiaoNuoDirect,ChinaMedia,Bilibili,OneDrive,Microsoft,Apple,Epic,Sony,Steam,NetEaseMusic":
+       - https://dns.alidns.com/dns-query
+    "rule-set:XiaoNuoProxy,Telegram,YouTube,Netflix,Bahamut,ProxyMedia,BilibiliHMT,IqiyiHMT,ProxyGFWlist":
+       - https://dns01.onlysing.com/dns-query
+       - https://dns02.onlysing.com/dns-query
+    #"www.baidu.com,+.google.cn": [223.5.5.5, https://dns.alidns.com/dns-query]
+
+# rewrite
+url-rewrite:
+- ^https?:\/\/(www.)?(g|google)\.cn https://www.google.com/ncr 302
+- ^https?:\/\/(ditu|maps).google\.cn https://maps.google.com/ncr 302
+
+# 订阅更新
+p: &p {type: http, interval: 3600, health-check: {enable: true, url: https://www.gstatic.com/generate_204, interval: 60}}
+
+# 节点
+proxies:
+  - {name: 🎯 全球直连, type: direct, udp: true}
+  - {name: 🛑 广告拦截, type: reject, udp: true}
+
+# 订阅节点配置
+proxy-providers:
+  xiaonuo:
+    <<: *p
+    url: "https://xxx.com/xiaonuo.yaml"
+
+# 策略组相关
+jd: &jd {type: select, proxies: [🚀 节点选择, 🎉 xiaonuo🛺, 🎉 xiaonuo, 🇹🇼 台湾🛺, 🇹🇼 台湾,  🇭🇰 香港🛺, 🇭🇰 香港, 🇯🇵 日本🛺, 🇯🇵 日本, 🇸🇬 新加坡🛺, 🇸🇬 新加坡, 🇰🇷 韩国🛺, 🇰🇷 韩国, 🇷🇺 俄罗斯🛺, 🇷🇺 俄罗斯, 🇨🇦 加拿大🛺, 🇨🇦 加拿大, 🇺🇸 美国🛺, 🇺🇸 美国, 🇬🇧 英国🛺, 🇬🇧 英国, 🇫🇷 法国🛺, 🇫🇷 法国, 🇩🇪 德国🛺, 🇩🇪 德国, 🇧🇷 巴西🛺, 🇧🇷 巴西, 🇳🇱 荷兰🛺, 🇳🇱 荷兰, 🚞 其它地区, 🌐 全部节点, ♻️ 自动选择, 🎯 全球直连], interval: 30, lazy: true, tolerance: 10}
+gn: &gn {type: select, proxies: [🎯 全球直连, 🎉 xiaonuo🛺, 🎉 xiaonuo, 🇹🇼 台湾🛺, 🇹🇼 台湾,  🇭🇰 香港🛺, 🇭🇰 香港, 🇯🇵 日本🛺, 🇯🇵 日本, 🇸🇬 新加坡🛺, 🇸🇬 新加坡, 🇰🇷 韩国🛺, 🇰🇷 韩国, 🇷🇺 俄罗斯🛺, 🇷🇺 俄罗斯, 🇨🇦 加拿大🛺, 🇨🇦 加拿大, 🇺🇸 美国🛺, 🇺🇸 美国, 🇬🇧 英国🛺, 🇬🇧 英国, 🇫🇷 法国🛺, 🇫🇷 法国, 🇩🇪 德国🛺, 🇩🇪 德国, 🇧🇷 巴西🛺, 🇧🇷 巴西, 🇳🇱 荷兰🛺, 🇳🇱 荷兰, 🚞 其它地区, 🌐 全部节点, ♻️ 自动选择], interval: 30, lazy: true, tolerance: 10}
+xz: &xz {type: select, proxies: [♻️ 自动选择, 🔮 负载均衡-轮询, 🔮 负载均衡-散列, 🔯 故障转移, 🎯 全球直连, 🎉 xiaonuo🛺, 🎉 xiaonuo, 🇹🇼 台湾🛺, 🇹🇼 台湾,  🇭🇰 香港🛺, 🇭🇰 香港, 🇯🇵 日本🛺, 🇯🇵 日本, 🇸🇬 新加坡🛺, 🇸🇬 新加坡, 🇰🇷 韩国🛺, 🇰🇷 韩国, 🇷🇺 俄罗斯🛺, 🇷🇺 俄罗斯, 🇨🇦 加拿大🛺, 🇨🇦 加拿大, 🇺🇸 美国🛺, 🇺🇸 美国, 🇬🇧 英国🛺, 🇬🇧 英国, 🇫🇷 法国🛺, 🇫🇷 法国, 🇩🇪 德国🛺, 🇩🇪 德国, 🇧🇷 巴西🛺, 🇧🇷 巴西, 🇳🇱 荷兰🛺, 🇳🇱 荷兰, 🚞 其它地区, 🌐 全部节点], interval: 30, lazy: true, tolerance: 10}
+lj: &lj {type: select, proxies: [🛑 广告拦截, 🎯 全球直连], interval: 30, lazy: true, tolerance: 10}
+
+# 代理组
+proxy-groups:
+  # 分组
+  - {name: 🚀 节点选择, <<: *xz}
+  - {name: 🍃 应用净化, <<: *lj}
+  - {name: 🆎 AdBlock, <<: *lj}
+  - {name: 🛡️ 隐私防护, <<: *lj}
+  - {name: 📲 电报消息, <<: *jd}
+  - {name: 💬 Ai平台, <<: *jd}
+  - {name: 📹 油管视频, <<: *jd}
+  - {name: 🎥 奈飞视频, <<: *jd}
+  - {name: 📺 巴哈姆特, <<: *jd}
+  - {name: 🌍 国外媒体, <<: *jd}
+  - {name: 🌏 出海媒体, <<: *jd}
+  - {name: 🌏 国内媒体, <<: *gn}
+  - {name: 📺 哔哩哔哩, <<: *gn}
+  - {name: 📢 谷歌FCM, <<: *gn}
+  - {name: Ⓜ️ 微软云盘, <<: *gn}
+  - {name: Ⓜ️ 微软服务, <<: *gn}
+  - {name: 🍎 苹果服务, <<: *gn}
+  - {name: 🎮 游戏平台, <<: *gn}
+  - {name: 🎶 网易音乐, <<: *gn}
+
+  # 地区分组自动选择
+  - {name: 🎉 xiaonuo🛺, type: url-test , use: ['xiaonuo'], interval: 30, lazy: true, tolerance: 10}
+  - {name: 🇹🇼 台湾🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(台|tw|taiwan)"}
+  - {name: 🇭🇰 香港🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(港|hk|hongkong|hong kong)"}
+  - {name: 🇯🇵 日本🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(日|jp|japan)"}
+  - {name: 🇸🇬 新加坡🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(新|sg|singapore)"}
+  - {name: 🇰🇷 韩国🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(韩|🇰🇷|KR)"}
+  - {name: 🇷🇺 俄罗斯🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇷🇺|RU|俄罗斯)"}
+  - {name: 🇨🇦 加拿大🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇨🇦|CA|加拿大)"}
+  - {name: 🇺🇸 美国🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(美|us|unitedstates|united states)"}
+  - {name: 🇬🇧 英国🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇬🇧|GB|英国)"}
+  - {name: 🇫🇷 法国🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇫🇷|FR|法国)"}
+  - {name: 🇩🇪 德国🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇩🇪|DE|德国)"}
+  - {name: 🇧🇷 巴西🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇧🇷|BR|巴西)"}
+  - {name: 🇳🇱 荷兰🛺, type: url-test , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇳🇱|NL|荷兰)"}
+
+  # 地区分组
+  - {name: 🎉 xiaonuo, type: select , use: ['xiaonuo'], interval: 30, lazy: true, tolerance: 10}
+  - {name: 🇹🇼 台湾, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(台|tw|taiwan)"}
+  - {name: 🇭🇰 香港, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(港|hk|hongkong|hong kong)"}
+  - {name: 🇯🇵 日本, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(日|jp|japan)"}
+  - {name: 🇸🇬 新加坡, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(新|sg|singapore)"}
+  - {name: 🇰🇷 韩国, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(韩|🇰🇷|KR)"}
+  - {name: 🇷🇺 俄罗斯, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇷🇺|RU|俄罗斯)"}
+  - {name: 🇨🇦 加拿大, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇨🇦|CA|加拿大)"}
+  - {name: 🇺🇸 美国, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(美|us|unitedstates|united states)"}
+  - {name: 🇬🇧 英国, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇬🇧|GB|英国)"}
+  - {name: 🇫🇷 法国, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇫🇷|FR|法国)"}
+  - {name: 🇩🇪 德国, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇩🇪|DE|德国)"}
+  - {name: 🇧🇷 巴西, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇧🇷|BR|巴西)"}
+  - {name: 🇳🇱 荷兰, type: select , include-all: true, interval: 30, lazy: true, tolerance: 10, filter: "(?i)(?!直连)(🇳🇱|NL|荷兰)"}
+  - {name: 🚞 其它地区, type: select , include-all: true, exclude-type: "direct|reject", exclude-filter: "(?i)(?:公司|直连|广告|拦截)", interval: 30, lazy: true, tolerance: 10, filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates|韩|🇰🇷|KR|🇷🇺|RU|俄罗斯|🇨🇦|CA|加拿大|🇬🇧|GB|英国|🇫🇷|FR|法国|🇩🇪|DE|德国|🇧🇷|BR|巴西|🇳🇱|NL|荷兰)).*"}
+
+
+  # 功能分组
+  - {name: 🌐 全部节点, type: select , include-all: true, exclude-type: "direct|reject", exclude-filter: "(?i)(?:公司|直连|广告|拦截)", interval: 30, lazy: true, tolerance: 10}
+  - {name: ♻️ 自动选择, type: url-test, include-all: true, exclude-type: "direct|reject", exclude-filter: "(?i)(?:公司|直连|广告|拦截)", interval: 30, lazy: true, tolerance: 10}
+  - {name: 🔯 故障转移, type: fallback, include-all: true, exclude-type: "direct|reject", exclude-filter: "(?i)(?:公司|直连|广告|拦截)", interval: 30, lazy: true, tolerance: 10}
+  - {name: 🔮 负载均衡-轮询, type: load-balance, strategy:round-robin, include-all: true, exclude-type: "direct|reject", exclude-filter: "(?i)(?:公司|直连|广告|拦截)", interval: 30, lazy: true, tolerance: 10}
+  - {name: 🔮 负载均衡-散列, type: load-balance, strategy:consistent-hashing, include-all: true,exclude-type: "direct|reject", exclude-filter: "(?i)(?:公司|直连|广告|拦截)", interval: 30, lazy: true, tolerance: 10}
+
+
+# 规则
+rules:
+  # 本机 clash 端口，直接拒绝，避免回环 warning
+  - DST-PORT,7892,REJECT
+  - DST-PORT,7893,REJECT
+  # 放行 dns
+  - IP-CIDR,1.1.1.1/32,🚀 节点选择,no-resolve
+  - IP-CIDR,1.0.0.1/32,🚀 节点选择,no-resolve
+  - IP-CIDR,8.8.8.8/32,🚀 节点选择,no-resolve
+  - IP-CIDR,8.8.4.4/32,🚀 节点选择,no-resolve
+  # 本机回环直连，放在最前
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR6,::1/128,DIRECT,no-resolve
+  # 拒绝所有 IPv6（提到 RuleSet 之前）
+  - IP-CIDR6,::/0,REJECT,no-resolve
+  # ===== XiaoNuoDirect =====
+  - AND,((RULE-SET,XiaoNuoDirect),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,XiaoNuoDirect),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== LocalAreaNetwork =====
+  - AND,((RULE-SET,LocalAreaNetwork),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,LocalAreaNetwork),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== ChinaIp =====
+  - AND,((RULE-SET,ChinaIp),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,ChinaIp),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== ChinaDomain =====
+  - AND,((RULE-SET,ChinaDomain),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,ChinaDomain),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== ChinaCompanyIp =====
+  - AND,((RULE-SET,ChinaCompanyIp),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,ChinaCompanyIp),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== Download =====
+  - AND,((RULE-SET,Download),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,Download),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== ChinaMedia =====
+  - AND,((RULE-SET,ChinaMedia),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,ChinaMedia),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== Bilibili =====
+  - AND,((RULE-SET,Bilibili),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,Bilibili),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== OneDrive =====
+  - AND,((RULE-SET,OneDrive),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,OneDrive),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== Microsoft =====
+  - AND,((RULE-SET,Microsoft),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,Microsoft),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== Apple =====
+  - AND,((RULE-SET,Apple),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,Apple),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== Epic =====
+  - AND,((RULE-SET,Epic),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,Epic),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== Sony =====
+  - AND,((RULE-SET,Sony),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,Sony),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== Steam =====
+  - AND,((RULE-SET,Steam),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,Steam),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # ===== NetEaseMusic =====
+  - AND,((RULE-SET,NetEaseMusic),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
+  - AND,((RULE-SET,NetEaseMusic),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
+  # 各规则集的其他流量（保持原有行为）
+  - RULE-SET,XiaoNuoDirect,🎯 全球直连
+  - RULE-SET,LocalAreaNetwork,🎯 全球直连
+  - RULE-SET,UnBan,🎯 全球直连
+  - RULE-SET,XiaoNuoReject,🛑 广告拦截
+  - RULE-SET,BanAD,🛑 广告拦截
+  - RULE-SET,BanProgramAD,🍃 应用净化
+  - RULE-SET,BanEasyList,🆎 AdBlock
+  - RULE-SET,BanEasyListChina,🆎 AdBlock
+  - RULE-SET,BanEasyPrivacy,🛡️ 隐私防护
+  - RULE-SET,OneDrive, Ⓜ️ 微软云盘
+  - RULE-SET,Microsoft,Ⓜ️ 微软服务
+  - RULE-SET,Apple,🍎 苹果服务
+  - RULE-SET,Telegram,📲 电报消息
+  - RULE-SET,AI,💬 Ai平台
+  - RULE-SET,OpenAi,💬 Ai平台
+  - RULE-SET,NetEaseMusic,🎶 网易音乐
+  - RULE-SET,Epic,🎮 游戏平台
+  - RULE-SET,Sony,🎮 游戏平台
+  - RULE-SET,Steam,🎮 游戏平台
+  - RULE-SET,YouTube,📹 油管视频
+  - RULE-SET,Netflix,🎥 奈飞视频
+  - RULE-SET,Bahamut,📺 巴哈姆特
+  - RULE-SET,Bilibili,📺 哔哩哔哩
+  - RULE-SET,ChinaMedia,🌏 国内媒体
+  - RULE-SET,ProxyMedia,🌍 国外媒体
+  - RULE-SET,BilibiliHMT,🌏 出海媒体
+  - RULE-SET,IqiyiHMT,🌏 出海媒体
+  - RULE-SET,ProxyGFWlist,🚀 节点选择
+  - RULE-SET,XiaoNuoProxy,🚀 节点选择
+  - RULE-SET,ChinaIp,🎯 全球直连
+  - RULE-SET,ChinaDomain,🎯 全球直连
+  - RULE-SET,ChinaCompanyIp,🎯 全球直连
+  - RULE-SET,Download,🎯 全球直连
+  - MATCH,🎯 全球直连
+
+# 规则更新策略
+rule-anchor:
+  ip: &ip {type: http, interval: 86400, behavior: ipcidr, format: yaml}
+  domain: &domain {type: http, interval: 86400, behavior: domain, format: yaml}
+  classical: &classical {type: http, interval: 86400, behavior: classical, format: yaml}
+
+# 规则集合
+rule-providers:
+  XiaoNuoDirect:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/XiaoNuoDirect.yaml
+  LocalAreaNetwork:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/LocalAreaNetwork.yaml
+  UnBan:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/UnBan.yaml
+  XiaoNuoReject:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/XiaoNuoReject.yaml
+  BanAD:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/BanAD.yaml
+  BanProgramAD:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/BanProgramAD.yaml
+  BanEasyList:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/BanEasyList.yaml
+  BanEasyListChina:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/BanEasyListChina.yaml
+  BanEasyPrivacy:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/BanEasyPrivacy.yaml
+  GoogleFCM:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/GoogleFCM.yaml
+  GoogleCN:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/GoogleCN.yaml
+  OneDrive:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/OneDrive.yaml
+  Microsoft:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Microsoft.yaml
+  Apple:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Apple.yaml
+  Telegram:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Telegram.yaml
+  AI:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/AI.yaml
+  OpenAi:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/OpenAi.yaml
+  NetEaseMusic:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/NetEaseMusic.yaml
+  Epic:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Epic.yaml
+  Sony:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Sony.yaml
+  Steam:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Steam.yaml
+  YouTube:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/YouTube.yaml
+  Netflix:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Netflix.yaml
+  Bahamut:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Bahamut.yaml
+  Bilibili:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Bilibili.yaml
+  ChinaMedia:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/ChinaMedia.yaml
+  ProxyMedia:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/ProxyMedia.yaml
+  BilibiliHMT:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/BilibiliHMT.yaml
+  IqiyiHMT:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/IqiyiHMT.yaml
+  XiaoNuoProxy:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/XiaoNuoProxy.yaml
+  ProxyGFWlist:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/ProxyGFWlist.yaml
+  ChinaIp:
+     <<: *ip
+     url: https://link.onlysing.com/get/clash/ruleset/ChinaIp.yaml
+  ChinaDomain:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/ChinaDomain.yaml
+  ChinaCompanyIp:
+    <<: *ip
+    url: https://link.onlysing.com/get/clash/ruleset/ChinaCompanyIp.yaml
+  Download:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Download.yaml
