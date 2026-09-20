@@ -348,62 +348,13 @@ rules:
   # 本机 clash 端口，直接拒绝，避免回环 warning
   - DST-PORT,7892,REJECT
   - DST-PORT,7893,REJECT
-  # 放行 dns
-  - IP-CIDR,1.1.1.1/32,🚀 节点选择,no-resolve
-  - IP-CIDR,1.0.0.1/32,🚀 节点选择,no-resolve
-  - IP-CIDR,8.8.8.8/32,🚀 节点选择,no-resolve
-  - IP-CIDR,8.8.4.4/32,🚀 节点选择,no-resolve
   # 本机回环直连，放在最前
   - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
   - IP-CIDR6,::1/128,DIRECT,no-resolve
   # 拒绝所有 IPv6（提到 RuleSet 之前）
   - IP-CIDR6,::/0,REJECT,no-resolve
-  # ===== XiaoNuoDirect =====
-  - AND,((RULE-SET,XiaoNuoDirect),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,XiaoNuoDirect),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== LocalAreaNetwork =====
-  - AND,((RULE-SET,LocalAreaNetwork),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,LocalAreaNetwork),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== ChinaIp =====
-  - AND,((RULE-SET,ChinaIp),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,ChinaIp),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== ChinaDomain =====
-  - AND,((RULE-SET,ChinaDomain),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,ChinaDomain),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== ChinaCompanyIp =====
-  - AND,((RULE-SET,ChinaCompanyIp),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,ChinaCompanyIp),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== Download =====
-  - AND,((RULE-SET,Download),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,Download),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== ChinaMedia =====
-  - AND,((RULE-SET,ChinaMedia),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,ChinaMedia),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== Bilibili =====
-  - AND,((RULE-SET,Bilibili),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,Bilibili),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== OneDrive =====
-  - AND,((RULE-SET,OneDrive),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,OneDrive),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== Microsoft =====
-  - AND,((RULE-SET,Microsoft),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,Microsoft),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== Apple =====
-  - AND,((RULE-SET,Apple),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,Apple),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== Epic =====
-  - AND,((RULE-SET,Epic),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,Epic),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== Sony =====
-  - AND,((RULE-SET,Sony),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,Sony),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== Steam =====
-  - AND,((RULE-SET,Steam),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,Steam),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # ===== NetEaseMusic =====
-  - AND,((RULE-SET,NetEaseMusic),(NETWORK,tcp),(DST-PORT,0-65535)),🎯 全球直连
-  - AND,((RULE-SET,NetEaseMusic),(NETWORK,udp),(DST-PORT,0-65535)),🎯 全球直连
-  # 各规则集的其他流量（保持原有行为）
+  # 各规则集流量分流
+  - RULE-SET,Dns,🚀 节点选择
   - RULE-SET,XiaoNuoDirect,🎯 全球直连
   - RULE-SET,LocalAreaNetwork,🎯 全球直连
   - RULE-SET,UnBan,🎯 全球直连
@@ -447,6 +398,9 @@ rule-anchor:
 
 # 规则集合
 rule-providers:
+  Dns:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/dns.yaml
   XiaoNuoDirect:
     <<: *classical
     url: https://link.onlysing.com/get/clash/ruleset/XiaoNuoDirect.yaml
