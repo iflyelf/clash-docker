@@ -402,18 +402,7 @@ rule-anchor:
 
 # 规则集合
 rule-providers:
-  Dns:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/dns.yaml
-  XiaoNuoDirect:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/XiaoNuoDirect.yaml
-  LocalAreaNetwork:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/LocalAreaNetwork.yaml
-  UnBan:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/UnBan.yaml
+  # 拒绝规则集
   XiaoNuoReject:
     <<: *classical
     url: https://link.onlysing.com/get/clash/ruleset/XiaoNuoReject.yaml
@@ -432,72 +421,13 @@ rule-providers:
   BanEasyPrivacy:
     <<: *classical
     url: https://link.onlysing.com/get/clash/ruleset/BanEasyPrivacy.yaml
-  GoogleFCM:
+  # 直连规则集
+  XiaoNuoDirect:
     <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/GoogleFCM.yaml
-  GoogleCN:
+    url: https://link.onlysing.com/get/clash/ruleset/XiaoNuoDirect.yaml
+  LocalAreaNetwork:
     <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/GoogleCN.yaml
-  OneDrive:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/OneDrive.yaml
-  Microsoft:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/Microsoft.yaml
-  Apple:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/Apple.yaml
-  Telegram:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/Telegram.yaml
-  AI:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/AI.yaml
-  OpenAi:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/OpenAi.yaml
-  NetEaseMusic:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/NetEaseMusic.yaml
-  Epic:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/Epic.yaml
-  Sony:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/Sony.yaml
-  Steam:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/Steam.yaml
-  YouTube:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/YouTube.yaml
-  Netflix:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/Netflix.yaml
-  Bahamut:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/Bahamut.yaml
-  Bilibili:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/Bilibili.yaml
-  ChinaMedia:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/ChinaMedia.yaml
-  ProxyMedia:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/ProxyMedia.yaml
-  BilibiliHMT:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/BilibiliHMT.yaml
-  IqiyiHMT:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/IqiyiHMT.yaml
-  XiaoNuoProxy:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/XiaoNuoProxy.yaml
-  ProxyGFWlist:
-    <<: *classical
-    url: https://link.onlysing.com/get/clash/ruleset/ProxyGFWlist.yaml
+    url: https://link.onlysing.com/get/clash/ruleset/LocalAreaNetwork.yaml
   ChinaIp:
      <<: *ip
      url: https://link.onlysing.com/get/clash/ruleset/ChinaIp.yaml
@@ -510,3 +440,77 @@ rule-providers:
   Download:
     <<: *classical
     url: https://link.onlysing.com/get/clash/ruleset/Download.yaml
+  UnBan:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/UnBan.yaml
+  ChinaMedia:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/ChinaMedia.yaml
+  Bilibili:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Bilibili.yaml
+  OneDrive:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/OneDrive.yaml
+  Microsoft:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Microsoft.yaml
+  Apple:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Apple.yaml
+  Epic:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Epic.yaml
+  Sony:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Sony.yaml
+  Steam:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Steam.yaml
+  NetEaseMusic:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/NetEaseMusic.yaml
+  # 代理规则集
+  Dns:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/dns.yaml
+  Telegram:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Telegram.yaml
+  AI:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/AI.yaml
+  OpenAi:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/OpenAi.yaml
+  YouTube:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/YouTube.yaml
+  Netflix:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Netflix.yaml
+  Bahamut:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/Bahamut.yaml
+  ProxyMedia:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/ProxyMedia.yaml
+  BilibiliHMT:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/BilibiliHMT.yaml
+  IqiyiHMT:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/IqiyiHMT.yaml
+  ProxyGFWlist:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/ProxyGFWlist.yaml
+  XiaoNuoProxy:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/XiaoNuoProxy.yaml
+  # 未使用的规则集
+  GoogleFCM:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/GoogleFCM.yaml
+  GoogleCN:
+    <<: *classical
+    url: https://link.onlysing.com/get/clash/ruleset/GoogleCN.yaml
