@@ -345,49 +345,53 @@ proxy-groups:
 
 # 规则
 rules:
-  # 本机 clash 端口，直接拒绝，避免回环 warning
-  - DST-PORT,7892,REJECT
-  - DST-PORT,7893,REJECT
   # 本机回环直连，放在最前
   - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
   - IP-CIDR6,::1/128,DIRECT,no-resolve
+  # 本机 clash 端口，直接拒绝，避免回环 warning
+  - DST-PORT,7892,REJECT
+  - DST-PORT,7893,REJECT
   # 拒绝所有 IPv6（提到 RuleSet 之前）
   - IP-CIDR6,::/0,REJECT,no-resolve
-  # 各规则集流量分流
-  - RULE-SET,Dns,🚀 节点选择
-  - RULE-SET,XiaoNuoDirect,🎯 全球直连
-  - RULE-SET,LocalAreaNetwork,🎯 全球直连
-  - RULE-SET,UnBan,🎯 全球直连
+  # 拒绝规则 RuleSet
   - RULE-SET,XiaoNuoReject,🛑 广告拦截
   - RULE-SET,BanAD,🛑 广告拦截
   - RULE-SET,BanProgramAD,🍃 应用净化
   - RULE-SET,BanEasyList,🆎 AdBlock
   - RULE-SET,BanEasyListChina,🆎 AdBlock
   - RULE-SET,BanEasyPrivacy,🛡️ 隐私防护
+  # 各规则集流量分流
+  ## 直连规则
+  - RULE-SET,XiaoNuoDirect,🎯 全球直连
+  - RULE-SET,LocalAreaNetwork,🎯 全球直连
+  - RULE-SET,ChinaIp,🎯 全球直连
+  - RULE-SET,ChinaDomain,🎯 全球直连
+  - RULE-SET,ChinaCompanyIp,🎯 全球直连
+  - RULE-SET,Download,🎯 全球直连
+  - RULE-SET,UnBan,🎯 全球直连
+  - RULE-SET,ChinaMedia,🌏 国内媒体
+  - RULE-SET,Bilibili,📺 哔哩哔哩
   - RULE-SET,OneDrive, Ⓜ️ 微软云盘
   - RULE-SET,Microsoft,Ⓜ️ 微软服务
   - RULE-SET,Apple,🍎 苹果服务
-  - RULE-SET,Telegram,📲 电报消息
-  - RULE-SET,AI,💬 Ai平台
-  - RULE-SET,OpenAi,💬 Ai平台
-  - RULE-SET,NetEaseMusic,🎶 网易音乐
   - RULE-SET,Epic,🎮 游戏平台
   - RULE-SET,Sony,🎮 游戏平台
   - RULE-SET,Steam,🎮 游戏平台
+  - RULE-SET,NetEaseMusic,🎶 网易音乐
+  ## 代理规则
+  - RULE-SET,Dns,🚀 节点选择
+  - RULE-SET,Telegram,📲 电报消息
+  - RULE-SET,AI,💬 Ai平台
+  - RULE-SET,OpenAi,💬 Ai平台
   - RULE-SET,YouTube,📹 油管视频
   - RULE-SET,Netflix,🎥 奈飞视频
   - RULE-SET,Bahamut,📺 巴哈姆特
-  - RULE-SET,Bilibili,📺 哔哩哔哩
-  - RULE-SET,ChinaMedia,🌏 国内媒体
   - RULE-SET,ProxyMedia,🌍 国外媒体
   - RULE-SET,BilibiliHMT,🌏 出海媒体
   - RULE-SET,IqiyiHMT,🌏 出海媒体
   - RULE-SET,ProxyGFWlist,🚀 节点选择
   - RULE-SET,XiaoNuoProxy,🚀 节点选择
-  - RULE-SET,ChinaIp,🎯 全球直连
-  - RULE-SET,ChinaDomain,🎯 全球直连
-  - RULE-SET,ChinaCompanyIp,🎯 全球直连
-  - RULE-SET,Download,🎯 全球直连
+  ## 兜底规则
   - MATCH,🎯 全球直连
 
 # 规则更新策略
